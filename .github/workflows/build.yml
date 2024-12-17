@@ -1,0 +1,58 @@
+name: portable-release-actions-workflow
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'c*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      
+permissions:
+  contents: write
+  
+jobs:
+  build:
+    name: Create Release
+    runs-on: windows-latest
+    env:
+      targetZip: rectorsquid-linkage-portable-${{ github.ref_name }}.zip
+    steps:
+      - uses: actions/checkout@v4
+      
+      - shell: cmd
+        run: |
+          curl https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe -L -O -J
+        
+      - name: api
+        shell: bash
+        run: |
+          export url=$(curl 'https://ar-web-api.snapchat.com/api/ls-download/' \
+          -H 'accept: */*' \
+          -H 'accept-language: en-US,en;q=0.9' \
+          -H 'content-type: application/json' \
+          -H 'origin: https://ar.snap.com' \
+          -H 'priority: u=1, i' \
+          -H 'referer: https://ar.snap.com/' \
+          -H 'sec-ch-ua: "Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"' \
+          -H 'sec-ch-ua-mobile: ?0' \
+          -H 'sec-ch-ua-platform: "Windows"' \
+          -H 'sec-fetch-dest: empty' \
+          -H 'sec-fetch-mode: cors' \
+          -H 'sec-fetch-site: cross-site' \
+          -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' \
+          --data-raw '{"version":"5.3.0","eula":true,"genAIOptIn":false,"platform":"WINDOWS","locale":"en-US","country":"ZZ"}' | ./jq-windows-amd64.exe --raw-output ".url")
+          curl "$url" --output installer.exe && \
+          ls
+          
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          directory: "installation/SourceDir/Linkage"
+          filename: "${{ env.targetZip }}"
+          
+      - name: Release prebuilt
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "installation/SourceDir/Linkage/${{ env.targetZip }}"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
