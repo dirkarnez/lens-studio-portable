@@ -14,7 +14,8 @@ jobs:
     name: Create Release
     runs-on: windows-latest
     env:
-      targetZip: rectorsquid-linkage-portable-${{ github.ref_name }}.zip
+      version: 5.3.0
+      targetZip: snap-ar-lens-studio-portable-${{ github.ref_name }}.zip
     steps:
       - uses: actions/checkout@v4
       
@@ -40,19 +41,24 @@ jobs:
           -H 'sec-fetch-site: cross-site' \
           -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' \
           --data-raw '{"version":"5.3.0","eula":true,"genAIOptIn":false,"platform":"WINDOWS","locale":"en-US","country":"ZZ"}' | ./jq-windows-amd64.exe --raw-output ".url")
-          curl "$url" --output installer.exe && \
+          curl "$url" --output Lens_Studio_v${{ env.version }}.exe && \
           ls
+
+      - shell: cmd
+        run: |
+          start "" /wait .\Lens_Studio_v${{ env.version }}.exe /verysilent /dir=installation &&^
+          echo done
           
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "installation/SourceDir/Linkage"
+          directory: "installation"
           filename: "${{ env.targetZip }}"
           
       - name: Release prebuilt
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "installation/SourceDir/Linkage/${{ env.targetZip }}"
+          artifacts: "installation/${{ env.targetZip }}"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
