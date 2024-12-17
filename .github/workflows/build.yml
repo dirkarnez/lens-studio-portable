@@ -43,12 +43,15 @@ jobs:
           --data-raw '{"version":"5.3.0","eula":true,"genAIOptIn":false,"platform":"WINDOWS","locale":"en-US","country":"ZZ"}' | ./jq-windows-amd64.exe --raw-output ".url")
           curl "$url" --output Lens_Studio_v${{ env.version }}.exe && \
           ls
-
+          
       - shell: cmd
         run: |
-          start "" /wait .\Lens_Studio_v${{ env.version }}.exe /verysilent /dir=installation &&^
+          curl https://github.com/dirkarnez/exec-timeout/releases/download/v1.0.0/exec-timeout-v1.0.0-windows-latest.zip -L -O &&^
+          7z x exec-timeout-v1.0.0-windows-latest.zip &&^
+          dir &&^
+          exec-timeout.exe 0 "%CD%\Lens_Studio_v${{ env.version }}.exe" /verysilent /dir=installation &&^
           echo done
-
+          
       - shell: cmd
         run: xcopy /H /Y /C "Lens Studio.exe.Portable.cmd" "installation"
           
