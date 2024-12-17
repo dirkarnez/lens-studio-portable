@@ -48,6 +48,9 @@ jobs:
         run: |
           start "" /wait .\Lens_Studio_v${{ env.version }}.exe /verysilent /dir=installation &&^
           echo done
+
+      - shell: cmd
+        run: xcopy /H /Y /C "Lens Studio.exe.Portable.cmd" "installation"
           
       - name: Archive Release
         uses: thedoctor0/zip-release@master
